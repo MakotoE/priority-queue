@@ -35,6 +35,16 @@ public:
 		}
 	}
 
+	PriorityQueue(const PriorityQueue& other) {
+		_array = std::make_unique<Entry[]>(other.size());
+		_size = other.size();
+		_capacity = other.size();
+
+		for (size_t i = 0; i < other.size(); ++i) {
+			_array[i] = other._array[i];
+		}
+	}
+
 	size_t size() const {
 		return _size;
 	}
@@ -47,7 +57,34 @@ public:
 	 * @return Removes and returns value with lowest key
 	 */
 	Entry pop() {
+		if (_size == 0) {
+			throw std::runtime_error("out of range");
+		}
 
+		Entry result = _array[0];
+
+		_array[0] = std::move(_array[_size - 1]);
+		--_size;
+
+		size_t index = 0;
+		size_t leftChild = 2 * index + 1;
+		while (leftChild < _size) {
+			size_t smallerChild = leftChild;
+			size_t rightChild = 2 * index + 2;
+			if (rightChild < _size && _array[rightChild].key < _array[leftChild].key) {
+				smallerChild = rightChild;
+			}
+
+			if (_array[index].key < _array[smallerChild].key) {
+				break;
+			} else {
+				std::swap(_array[index], _array[smallerChild]);
+			}
+
+			index = smallerChild;
+			leftChild =  2 * index + 1;
+		}
+		return result;
 	}
 
 	/**
@@ -92,24 +129,6 @@ public:
 		}
 		_array = std::move(new_array);
 		_capacity = new_capacity;
-	}
-
-	bool operator==(const PriorityQueue& other) const {
-		if (_size != other._size) {
-			return false;
-		}
-
-		for (size_t i = 0; i < _size; ++i) {
-			if ((*this)[i] != other[i]) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	bool operator!=(const PriorityQueue& rhs) const {
-		return !(rhs == *this);
 	}
 
 private:
